@@ -65,7 +65,7 @@ void sendMetricsTask(void *pvParameters) {
                 xSemaphoreGive(metricQueueMutex);
             }
         }
-        vTaskDelay(1000 / portTICK_PERIOD_MS); // Delay 1 giây giữa các lần gửi
+        vTaskDelay(10 / portTICK_PERIOD_MS); // Delay 1 giây giữa các lần gửi
     }
 }
 
@@ -194,10 +194,10 @@ void onCollectData(const char *id, const char *data)
         }
     }
 
-    if (metricQueue.size() > 200) {
+    if (metricQueue.size() > 100) {
       ESP_LOGI("Main", "Clearing metric queue");
         if (xSemaphoreTake(metricQueueMutex, portMAX_DELAY) == pdTRUE) {
-            while (metricQueue.size() > 200) {
+            while (metricQueue.size() > 100) {
                 metricQueue.pop();
             }
             xSemaphoreGive(metricQueueMutex);

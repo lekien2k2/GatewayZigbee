@@ -133,6 +133,11 @@ void PEClient::initWiFi()
     {
         Serial.print('.');
         delay(1000);
+        ESP_LOGI("PEClient", "WiFi status: %d", WiFi.status());
+        if(WiFi.status() == WL_DISCONNECTED || WiFi.status() == WL_CONNECTION_LOST || WiFi.status() == WL_CONNECT_FAILED) {
+            ESP_LOGE("PEClient", "WiFi disconnected");
+            ESP.restart();
+        }
     }
     ESP_LOGI("PEClient", "Connected to the WiFi network");
     ESP_LOGI("PEClient", "IP address: %s", WiFi.localIP().toString().c_str());

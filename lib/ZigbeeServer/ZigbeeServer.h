@@ -7,6 +7,8 @@
 #include <functional>
 #include "HardwareSerial.h"
 #include <algorithm>
+#include <sstream>
+// #include <iomanip>
 
 struct Device {
     std::string id;
@@ -25,6 +27,7 @@ public:
     static ZigbeeServer* getInstance();
     void checkDevice(const char *id);
     void sendCommand(const char *id, const char *cmd);
+    void sendCommand(const char *id, const char *secrect_key, const char *cmd);
     void broadcastMessage();
 
     std::vector<Device> deviceList;
