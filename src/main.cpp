@@ -52,6 +52,14 @@ std::queue<Metric> metricQueue;
 std::vector<Attribute> attributes; // Khai báo vector attributes
 SemaphoreHandle_t metricQueueMutex; // Mutex để bảo vệ truy cập vào hàng đợi
 
+/**
+ * @name sendMetricsTask
+ * @brief Gửi dữ liệu đo được lên MQTT
+ * 
+ * @param {void*} pvParameters - Tham số truyền vào
+ * 
+ * @return None
+ */
 void sendMetricsTask(void *pvParameters) {
     while (true) {
         if (peClient.connected()) {
@@ -69,6 +77,14 @@ void sendMetricsTask(void *pvParameters) {
     }
 }
 
+/**
+ * @name setup
+ * @brief Hàm khởi tạo
+ * 
+ * @param None
+ * 
+ * @return None
+ */
 void setup()
 {
     zigbeeServer.begin();
@@ -105,6 +121,14 @@ void setup()
     zigbeeServer.onMessage(onCollectData);
 }
 
+/**
+ * @name loop
+ * @brief Hàm vòng lặp
+ * 
+ * @param None
+ * 
+ * @return None
+ */
 void loop()
 {
     timeClient.update(); // Cập nhật thời gian mỗi chu kỳ loop
@@ -112,16 +136,40 @@ void loop()
     delay(1000);
 }
 
+/**
+ * @name stringToBool
+ * @brief Chuyển đổi chuỗi thành boolean
+ * 
+ * @param {const String &} value - Chuỗi cần chuyển đổi
+ * 
+ * @return {bool} - Giá trị boolean
+ */
 bool stringToBool(const String &value)
 {
     return value.equalsIgnoreCase("true") || value == "1";
 }
 
+/**
+ * @name led1Callback
+ * @brief Callback khi có dữ liệu đến từ MQTT
+ * 
+ * @param {String} value - Dữ liệu nhận được
+ * 
+ * @return None
+ */
 void led1Callback(String value)
 {
     digitalWrite(LED1_PIN, stringToBool(value));
 }
 
+/**
+ * @name sendAttributes
+ * @brief Gửi thông số lên MQTT
+ * 
+ * @param None
+ * 
+ * @return None
+ */
 void sendAttributes()
 {
     attributes.clear();
@@ -147,6 +195,15 @@ void sendAttributes()
     }
 }
 
+/**
+ * @name onCollectData
+ * @brief Hàm thu thập dữ liệu từ thiết bị
+ * 
+ * @param {const char*} id - ID của thiết bị
+ * @param {const char*} data - Dữ liệu từ thiết bị
+ * 
+ * @return None
+ */
 void onCollectData(const char *id, const char *data)
 {
     ESP_LOGI("Main", "Collect data from device %s: %s", id, data);

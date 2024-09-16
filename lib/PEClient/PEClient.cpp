@@ -2,6 +2,20 @@
 
 PEClient *PEClient::_instance = nullptr;
 
+/**
+ * @name PEClient
+ * @brief Hàm khởi tạo PEClient
+ * 
+ * @param {const char*} wifiSSID - Tên wifi
+ * @param {const char*} wifiPassword - Mật khẩu wifi
+ * @param {const char*} mqttServer - Server MQTT
+ * @param {int} mqttPort - Cổng MQTT
+ * @param {const char*} clientId - ID của thiết bị
+ * @param {const char*} username - Tên người dùng
+ * @param {const char*} password - Mật khẩu
+ * 
+ * @return None
+ */
 PEClient::PEClient(const char *wifiSSID, const char *wifiPassword, const char *mqttServer, int mqttPort, const char *clientId, const char *username, const char *password)
     : _ssid(wifiSSID), _password(wifiPassword), _mqttServer(mqttServer), _mqttPort(mqttPort), _clientId(clientId), _username(username), _passwordMqtt(password), _client(_espClient)
 {
@@ -19,6 +33,14 @@ PEClient::PEClient(const char *wifiSSID, const char *wifiPassword, const char *m
     _instance = this;
 }
 
+/**
+ * @name begin
+ * @brief Khởi tạo PEClient
+ * 
+ * @param None
+ * 
+ * @return None
+ */
 void PEClient::begin()
 {
     // Serial.begin(115200);
@@ -42,6 +64,14 @@ void PEClient::begin()
     );
 }
 
+/**
+ * @name loop
+ * @brief Vòng lặp chính của PEClient
+ * 
+ * @param None
+ * 
+ * @return None
+ */
 void PEClient::loop()
 {
     if (!_client.connected())
@@ -51,79 +81,28 @@ void PEClient::loop()
     _client.loop();
 }
 
+/**
+ * @name connected
+ * @brief Kiểm tra xem PEClient có kết nối được với MQTT hay không
+ * 
+ * @param None
+ * 
+ * @return boolean - True nếu kết nối được, False nếu ngược lại
+ */
 boolean PEClient::connected()
 {
     return _client.connected();
 }
 
-void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
-    if (event == SYSTEM_EVENT_STA_DISCONNECTED) {
-        Serial.println("WiFi lost connection");
-        // Kiểm tra lý do ngắt kết nối
-        if(info.prov_fail_reason == WIFI_REASON_AUTH_FAIL) {
-            Serial.println("Authentication failed");
-            ESP.restart();
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_NO_AP_FOUND) {
-            Serial.println("No AP found");
-            ESP.restart();
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_AUTH_EXPIRE) {
-            Serial.println("Authentication expired");
-            ESP.restart();
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_ASSOC_EXPIRE) {
-            Serial.println("Association expired");
-            ESP.restart();
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_HANDSHAKE_TIMEOUT) {
-            Serial.println("Handshake timeout");
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_CONNECTION_FAIL) {
-            Serial.println("Connection failed");
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_NOT_AUTHED) {
-            Serial.println("Not authenticated");
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_NOT_ASSOCED) {
-            Serial.println("Not associated");
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_ASSOC_LEAVE) {
-            Serial.println("Association leave");
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_ASSOC_NOT_AUTHED) {
-            Serial.println("Association not authenticated");
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_DISASSOC_PWRCAP_BAD) {
-            Serial.println("Disassociation power capability bad");
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_DISASSOC_SUPCHAN_BAD) {
-            Serial.println("Disassociation supported channel bad");
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_IE_INVALID) {
-            Serial.println("Invalid IE");
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_MIC_FAILURE) {
-            Serial.println("MIC failure");
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT) {
-            Serial.println("4-way handshake timeout");
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_GROUP_KEY_UPDATE_TIMEOUT) {
-            Serial.println("Group key update timeout");
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_IE_IN_4WAY_DIFFERS) {
-            Serial.println("IE in 4-way differs");
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_GROUP_CIPHER_INVALID) {
-            Serial.println("Group cipher invalid");
-        }
-        else if(info.prov_fail_reason == WIFI_REASON_PAIRWISE_CIPHER_INVALID) {
-            Serial.println("Pairwise cipher invalid");
-        }
-    }
-}
 
+/**
+ * @name initWiFi
+ * @brief Khởi tạo kết nối WiFi
+ * 
+ * @param None
+ * 
+ * @return None
+ */
 void PEClient::initWiFi()
 {
     WiFi.mode(WIFI_STA);
@@ -143,6 +122,14 @@ void PEClient::initWiFi()
     ESP_LOGI("PEClient", "IP address: %s", WiFi.localIP().toString().c_str());
 }
 
+/**
+ * @name reconnect
+ * @brief Kết nối lại với MQTT
+ * 
+ * @param None
+ * 
+ * @return None
+ */
 void PEClient::reconnect()
 {
     while (!_client.connected())
@@ -168,6 +155,16 @@ void PEClient::reconnect()
     }
 }
 
+/**
+ * @name callback
+ * @brief Xử lý dữ liệu nhận được từ MQTT
+ * 
+ * @param {char*} topic - Chủ đề
+ * @param {byte*} message - Dữ liệu
+ * @param {unsigned int} length - Độ dài dữ liệu
+ * 
+ * @return None
+ */
 void PEClient::callback(char *topic, byte *message, unsigned int length)
 {
     String messageTemp;
@@ -200,6 +197,16 @@ void PEClient::callback(char *topic, byte *message, unsigned int length)
     }
 }
 
+/**
+ * @name sendMetric
+ * @brief Gửi dữ liệu đo được lên MQTT
+ * 
+ * @param {uint64_t} timestamp - Thời gian
+ * @param {const char*} key - Tên thông số
+ * @param {double} value - Giá trị
+ * 
+ * @return None
+ */
 void PEClient::sendMetric(uint64_t timestamp, const char *key, double value)
 {
     if (!_client.connected())
@@ -219,6 +226,15 @@ void PEClient::sendMetric(uint64_t timestamp, const char *key, double value)
     ESP_LOGI("PEClient", "Send metric: %s", buffer);
 }
 
+/**
+ * @name sendMetric
+ * @brief Gửi dữ liệu đo được lên MQTT
+ * 
+ * @param {const char*} key - Tên thông số
+ * @param {double} value - Giá trị
+ * 
+ * @return None
+ */
 void PEClient::sendMetric(const char *key, double value)
 {
     if (!_client.connected())
@@ -236,6 +252,15 @@ void PEClient::sendMetric(const char *key, double value)
     _client.publish(_sendMetricTopic.c_str(), buffer);
 }
 
+/**
+ * @name sendAttribute
+ * @brief Gửi thông số lên MQTT
+ * 
+ * @param {const char*} key - Tên thông số
+ * @param {double} value - Giá trị
+ * 
+ * @return None
+ */
 void PEClient::sendAttribute(const char *key, double value)
 {
     if (!_client.connected())
@@ -253,6 +278,15 @@ void PEClient::sendAttribute(const char *key, double value)
     _client.publish(_sendAttributeTopic.c_str(), buffer);
 }
 
+/**
+ * @name sendAttribute
+ * @brief Gửi thông số lên MQTT
+ * 
+ * @param {const char*} key - Tên thông số
+ * @param {const char*} value - Giá trị
+ * 
+ * @return None
+ */
 void PEClient::sendAttribute(const char *key, const char *value)
 {
     if (!_client.connected())
@@ -270,6 +304,15 @@ void PEClient::sendAttribute(const char *key, const char *value)
     _client.publish(_sendAttributeTopic.c_str(), buffer);
 }
 
+/**
+ * @name on
+ * @brief Đăng ký callback cho một thông số
+ * 
+ * @param {const char*} key - Tên thông số
+ * @param {void (*)(String)} callback - Hàm callback
+ * 
+ * @return None
+ */
 void PEClient::on(const char *key, void (*callback)(String))
 {
     _callbacks[key] = std::bind(callback, std::placeholders::_1);

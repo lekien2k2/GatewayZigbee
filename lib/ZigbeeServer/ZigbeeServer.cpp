@@ -7,6 +7,14 @@ ZigbeeServer::ZigbeeServer() : _zigbeeSerial(&Serial1)
 {
 }
 
+/**
+ * @name begin
+ * @brief Khởi tạo ZigbeeServer
+ * 
+ * @param None
+ * 
+ * @return None
+ */
 void ZigbeeServer::begin() {
     ESP_LOGI("ZigbeeServer", "Starting...");
     initZigbee();
@@ -30,6 +38,15 @@ void ZigbeeServer::begin() {
     );
 }
 
+/**
+ * @name loop
+ * 
+ * @brief Vòng lặp chính của ZigbeeServer
+ * 
+ * @param None
+ * 
+ * @return None
+ */
 void ZigbeeServer::loop() {
     static std::string incomingMessage; // Thêm static để lưu trữ tạm thời dữ liệu nhận được
     while (_zigbeeSerial->available()) {
@@ -50,20 +67,52 @@ void ZigbeeServer::loop() {
     }
 }
 
+/**
+ * @name addDevice
+ * @brief Thêm thiết bị vào danh sách thiết bị
+ * 
+ * @param {const char *} id - ID của thiết bị
+ * 
+ * @return None
+ */
 void ZigbeeServer::addDevice(const char *id) {
     Device device;
     device.id = id;
     deviceList.push_back(device);
 }
 
+/**
+ * @name onMessage
+ * @brief Đăng ký hàm callback khi nhận được dữ liệu từ thiết bị
+ * 
+ * @param {std::function<void(const char *id, const char *data)>} callback - Hàm callback
+ * 
+ * @return None
+ */
 void ZigbeeServer::onMessage(std::function<void(const char *id, const char *data)> callback) {
     messageCallback = callback;
 }
 
+/**
+ * @name onChange
+ * @brief Đăng ký hàm callback khi có thay đổi trạng thái thiết bị
+ * 
+ * @param {std::function<void()>} callback - Hàm callback
+ * 
+ * @return None
+ */
 void ZigbeeServer::onChange(std::function<void()> callback) {
     onChangeCallback = callback;
 }
 
+/**
+ * @name getInstance
+ * @brief Lấy đối tượng ZigbeeServer
+ * 
+ * @param None
+ * 
+ * @return ZigbeeServer* - Đối tượng ZigbeeServer
+ */
 ZigbeeServer* ZigbeeServer::getInstance() {
     if (_instance == nullptr) {
         _instance = new ZigbeeServer();
@@ -71,24 +120,67 @@ ZigbeeServer* ZigbeeServer::getInstance() {
     return _instance;
 }
 
+/**
+ * @name checkDevice
+ * @brief Gửi lệnh kiểm tra thiết bị
+ * 
+ * @param {const char *} id - ID của thiết bị
+ * 
+ * @return None
+ */
 void ZigbeeServer::checkDevice(const char *id) {
     sendCommand(id, "CHECK");
 }
 
+/**
+ * @name sendCommand
+ * @brief Gửi lệnh đến thiết bị
+ * 
+ * @param {const char *} id - ID của thiết bị
+ * @param {const char *} cmd - Lệnh cần gửi
+ * 
+ * @return None
+ */
 void ZigbeeServer::sendCommand(const char *id, const char *cmd) {
     std::string message = std::string("ID:") + id + ",CMD:" + cmd;
     messageQueue.push(message);
 }
 
+/**
+ * @name sendCommand
+ * @brief Gửi lệnh đến thiết bị với khóa bí mật
+ * 
+ * @param {const char *} id - ID của thiết bị
+ * @param {const char *} secrect_key - Khóa bí mật
+ * @param {const char *} cmd - Lệnh cần gửi
+ * 
+ * @return None
+ */
 void ZigbeeServer::sendCommand(const char *id, const char *secrect_key, const char *cmd) {
     std::string message = std::string("ID:") + id +",SECRECT_KEY:"+ secrect_key +",CMD:" + cmd;
     messageQueue.push(message);
 }
 
+/**
+ * @name broadcastMessage
+ * @brief Gửi lệnh broadcast message
+ * 
+ * @param None
+ * 
+ * @return None
+ */
 void ZigbeeServer::broadcastMessage() {
     _zigbeeSerial->println("CMD:BRD:DISC");
 }
 
+/**
+ * @name initZigbee
+ * @brief Khởi tạo Zigbee
+ * 
+ * @param None
+ * 
+ * @return None
+ */
 void ZigbeeServer::initZigbee() {
     _zigbeeSerial->begin(9600, SERIAL_8N1, 16, 17); // Thay đổi RX_PIN và TX_PIN theo cấu hình của bạn
     // _zigbeeSerial->println("AT+ZSET:ROLE=COORD");
@@ -99,6 +191,16 @@ void ZigbeeServer::initZigbee() {
 
     
 }
+
+/**
+ * @name calculateCRC32
+ * @brief Tính toán CRC32
+ * 
+ * @param {const char*} data - Dữ liệu cần tính toán
+ * @param {size_t} length - Độ dài dữ liệu
+ * 
+ * @return uint32_t - CRC32
+ */
 uint32_t calculateCRC32(const char* data, size_t length) {
     uint32_t crc = 0xffffffff;
     while (length--) {
@@ -117,6 +219,14 @@ uint32_t calculateCRC32(const char* data, size_t length) {
     return ~crc;
 }
 
+/**
+ * @name checkCRC32
+ * @brief Kiểm tra CRC32
+ * 
+ * @param {const std::string&} data_with_crc - Dữ liệu cần kiểm tra
+ * 
+ * @return bool - True nếu CRC32 hợp lệ, False nếu ngược lại
+ */
 bool checkCRC32(const std::string& data_with_crc) {
     size_t pos = data_with_crc.rfind(",CRC:");
     if (pos == std::string::npos) {
@@ -142,6 +252,14 @@ received_crc = received_crc.substr(0, 8);
     return std::string(crcString) == std::string(received_crc);
 }
 
+/**
+ * @name handleIncomingMessage
+ * @brief Xử lý dữ liệu nhận được
+ * 
+ * @param {const std::string&} message - Dữ liệu nhận được
+ * 
+ * @return None
+ */
 void ZigbeeServer::handleIncomingMessage(const std::string& message) {
     if (!checkCRC32(message)) {
         ESP_LOGE("ZigbeeServer", "Invalid CRC");
